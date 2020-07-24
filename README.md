@@ -1,4 +1,4 @@
-![logo](https://raw.githubusercontent.com/zlmediakit/ZLMediaKit/master/logo.png)
+![logo](https://raw.githubusercontent.com/zlmediakit/ZLMediaKit/master/www/logo.png)
 
 [english readme](https://github.com/xiongziliang/ZLMediaKit/blob/master/README_en.md)
 
@@ -89,8 +89,7 @@
 
 
 ## 编译以及测试
-
-请参考wiki:[快速开始](https://github.com/xiongziliang/ZLMediaKit/wiki/%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B)
+**编译前务必仔细参考wiki:[快速开始](https://github.com/xiongziliang/ZLMediaKit/wiki/%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B)操作!!!**
 
 ## 怎么使用
 
@@ -123,6 +122,7 @@ bash build_docker_images.sh
  - [基于ZLMediaKit主线的管理WEB网站](https://gitee.com/kkkkk5G/MediaServerUI)
  - [DotNetCore的RESTful客户端](https://github.com/MingZhuLiu/ZLMediaKit.DotNetCore.Sdk)
  - [GB28181-2016网络视频平台](https://github.com/swwheihei/wvp)
+ - [node-js版本的GB28181平台](https://gitee.com/hfwudao/GB28181_Node_Http)
  
 
 ## 授权协议
@@ -170,6 +170,6 @@ bash build_docker_images.sh
 
 欢迎捐赠以便更好的推动项目的发展，谢谢您的支持!
 
-[支付宝](https://raw.githubusercontent.com/xiongziliang/other/master/IMG_3919.JPG)
+[支付宝](https://gitee.com/xiahcu/other/raw/master/IMG_3919.JPG)
 
-[微信](https://raw.githubusercontent.com/xiongziliang/other/master/IMG_3920.JPG)
+[微信](https://gitee.com/xiahcu/other/raw/master/IMG_3920.JPG)

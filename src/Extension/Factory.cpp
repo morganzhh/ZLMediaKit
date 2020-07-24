@@ -33,17 +33,12 @@ Track::Ptr Factory::getTrackBySdp(const SdpTrack::Ptr &track) {
             return nullptr;
         }
         string aac_cfg;
-
-        unsigned int cfg1;
-        sscanf(aac_cfg_str.substr(0, 2).data(), "%02X", &cfg1);
-        cfg1 &= 0x00FF;
-        aac_cfg.push_back(cfg1);
-
-        unsigned int cfg2;
-        sscanf(aac_cfg_str.substr(2, 2).data(), "%02X", &cfg2);
-        cfg2 &= 0x00FF;
-        aac_cfg.push_back(cfg2);
-
+        for(int i = 0 ; i < aac_cfg_str.size() / 2 ; ++i ){
+            unsigned int cfg;
+            sscanf(aac_cfg_str.substr(i * 2, 2).data(), "%02X", &cfg);
+            cfg &= 0x00FF;
+            aac_cfg.push_back((char)cfg);
+        }
         return std::make_shared<AACTrack>(aac_cfg);
     }
 
@@ -115,7 +110,7 @@ RtpCodec::Ptr Factory::getRtpEncoderBySdp(const Sdp::Ptr &sdp) {
     }
     auto mtu = (sdp->getTrackType() == TrackVideo ? video_mtu : audio_mtu);
     auto sample_rate = sdp->getSampleRate();
-    auto pt = sdp->getPlayloadType();
+    auto pt = sdp->getPayloadType();
     auto interleaved = sdp->getTrackType() * 2;
     auto codec_id = sdp->getCodecId();
     switch (codec_id){
@@ -123,7 +118,7 @@ RtpCodec::Ptr Factory::getRtpEncoderBySdp(const Sdp::Ptr &sdp) {
         case CodecH265 : return std::make_shared<H265RtpEncoder>(ssrc,mtu,sample_rate,pt,interleaved);
         case CodecAAC : return std::make_shared<AACRtpEncoder>(ssrc,mtu,sample_rate,pt,interleaved);
         case CodecG711A :
-        case CodecG711U : return std::make_shared<G711RtpEncoder>(ssrc, mtu, sample_rate, pt, interleaved);
+        case CodecG711U : return std::make_shared<G711RtpEncoder>(codec_id, ssrc, mtu, sample_rate, pt, interleaved);
         default : WarnL << "暂不支持该CodecId:" << codec_id; return nullptr;
     }
 }
@@ -134,7 +129,7 @@ RtpCodec::Ptr Factory::getRtpDecoderByTrack(const Track::Ptr &track) {
         case CodecH265 : return std::make_shared<H265RtpDecoder>();
         case CodecAAC : return std::make_shared<AACRtpDecoder>(track->clone());
         case CodecG711A :
-        case CodecG711U : return std::make_shared<G711RtpDecoder>(track->clone());
+        case CodecG711U : return std::make_shared<G711RtpDecoder>(track->getCodecId());
         default : WarnL << "暂不支持该CodecId:" << track->getCodecName(); return nullptr;
     }
 }
@@ -221,22 +216,35 @@ Track::Ptr Factory::getAudioTrackByAmf(const AMFValue& amf, int sample_rate, int
     return getTrackByCodecId(codecId, sample_rate, channels, sample_bit);
 }
 
-RtmpCodec::Ptr Factory::getRtmpCodecByTrack(const Track::Ptr &track) {
+RtmpCodec::Ptr Factory::getRtmpCodecByTrack(const Track::Ptr &track, bool is_encode) {
     switch (track->getCodecId()){
         case CodecH264 : return std::make_shared<H264RtmpEncoder>(track);
         case CodecAAC : return std::make_shared<AACRtmpEncoder>(track);
         case CodecH265 : return std::make_shared<H265RtmpEncoder>(track);
         case CodecG711A :
-        case CodecG711U : return std::make_shared<G711RtmpEncoder>(track);
+        case CodecG711U : {
+            auto audio_track = dynamic_pointer_cast<AudioTrack>(track);
+            if (is_encode && (audio_track->getAudioSampleRate() != 8000 ||
+                              audio_track->getAudioChannel() != 1 ||
+                              audio_track->getAudioSampleBit() != 16)) {
+                //rtmp对g711只支持8000/1/16规格，但是ZLMediaKit可以解析其他规格的G711
+                WarnL << "RTMP只支持8000/1/16规格的G711,目前规格是:"
+                      << audio_track->getAudioSampleRate() << "/"
+                      << audio_track->getAudioChannel() << "/"
+                      << audio_track->getAudioSampleBit()
+                      << ",该音频已被忽略";
+                return nullptr;
+            }
+            return std::make_shared<G711RtmpEncoder>(track);
+        }
         default : WarnL << "暂不支持该CodecId:" << track->getCodecName(); return nullptr;
     }
 }
 
 AMFValue Factory::getAmfByCodecId(CodecId codecId) {
     switch (codecId){
-        //此处用string标明rtmp编码类型目的是为了兼容某些android系统
-        case CodecAAC: return AMFValue("mp4a");
-        case CodecH264: return AMFValue("avc1");
+        case CodecAAC: return AMFValue(FLV_CODEC_AAC);
+        case CodecH264: return AMFValue(FLV_CODEC_H264);
         case CodecH265: return AMFValue(FLV_CODEC_H265);
         case CodecG711A: return AMFValue(FLV_CODEC_G711A);
         case CodecG711U: return AMFValue(FLV_CODEC_G711U);

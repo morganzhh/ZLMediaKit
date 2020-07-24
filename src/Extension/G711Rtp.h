@@ -21,7 +21,7 @@ class G711RtpDecoder : public RtpCodec , public ResourcePoolHelper<G711Frame> {
 public:
     typedef std::shared_ptr<G711RtpDecoder> Ptr;
 
-    G711RtpDecoder(const Track::Ptr &track);
+    G711RtpDecoder(CodecId codecid);
     ~G711RtpDecoder() {}
 
     /**
@@ -34,9 +34,6 @@ public:
     CodecId getCodecId() const override{
         return _codecid;
     }
-
-protected:
-    G711RtpDecoder() {}
 
 private:
     void onGetG711(const G711Frame::Ptr &frame);
@@ -58,13 +55,14 @@ public:
      * @param ui32Ssrc ssrc
      * @param ui32MtuSize mtu 大小
      * @param ui32SampleRate 采样率
-     * @param ui8PlayloadType pt类型
+     * @param ui8PayloadType pt类型
      * @param ui8Interleaved rtsp interleaved 值
      */
-    G711RtpEncoder(uint32_t ui32Ssrc,
+    G711RtpEncoder(CodecId codecid,
+                   uint32_t ui32Ssrc,
                    uint32_t ui32MtuSize,
                    uint32_t ui32SampleRate,
-                   uint8_t ui8PlayloadType = 0,
+                   uint8_t ui8PayloadType = 0,
                    uint8_t ui8Interleaved = TrackAudio * 2);
     ~G711RtpEncoder() {}
 
